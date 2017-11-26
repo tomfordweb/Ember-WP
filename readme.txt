@@ -1,0 +1,1 @@
+This theme is still in development, you are welcome to use it...but shit is probably broken.
