@@ -8,7 +8,7 @@ var jshint = require('gulp-jshint');
 var uglify = require('gulp-uglify');
 var minifycss = require('gulp-minify-css');
 var sass = require('gulp-sass');
-var    include       = require("gulp-include");
+
 
 gulp.task('styles', function() {
   gulp.src('./src/sass/*.scss')
@@ -27,27 +27,28 @@ gulp.task('styles', function() {
 });
 
 gulp.task('scripts', function(){
-  return gulp.src('src/js/*.js')
-    // allows for the includsion of files much like how SASS works
-    .pipe(include({
-      extensions: "js",
-      hardFail: true,
-      includePaths: [
-        __dirname + "/node_modules",
-        __dirname + "/src/js",
-        __dirname + "/inc"
-      ]
-    }))
+  return gulp.src('src/js/**/*.js')
     .pipe(plumber({
       errorHandler: function (error) {
         console.log(error.message);
         this.emit('end');
     }}))
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'))
     .pipe(babel())
+    .pipe(gulp.dest('dist/js/'))
     .pipe(rename({suffix: '.min'}))
-    .pipe(uglify())
+    // .pipe(uglify())
     .pipe(gulp.dest('dist/js/'))
 });
+
+gulp.task('babel', () =>
+  gulp.src('src/landing-page.jsx')
+    .pipe(babel({
+      presets: ['@babel/env']
+    }))
+    .pipe(gulp.dest('dist'))
+);
 
 gulp.task('default', function(){
   gulp.watch("src/sass/**/*.scss", ['styles']);

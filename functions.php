@@ -5,6 +5,7 @@ require_once('inc/comments/tfwCommentWalker.php');
 require_once('inc/cpt/snippet.php');
 require_once('inc/cpt/project.php');
 require_once('inc/metaboxes/snippet/gist.php');
+require_once('inc/metaboxes/landing-page/landing-page.php');
 
 add_action( 'after_setup_theme', 'ember_setup' );
 add_action( 'wp_enqueue_scripts', 'ember_load_scripts' );
