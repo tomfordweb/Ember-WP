@@ -1,5 +1,6 @@
 <?php
 
+// require_once('../metaboxes/snippet/gist.php');
 // Register Custom Post Type
 function ember_create_snippet_cpt() {
 
@@ -42,7 +43,7 @@ function ember_create_snippet_cpt() {
 		'label'                 => __( 'Snippet', 'text_domain' ),
 		'description'           => __( 'Code Snippets', 'text_domain' ),
 		'labels'                => $labels,
-		'supports'              => array( 'title', 'editor' ),
+		'supports'              => array( 'title', 'editor', ' custom-fields','comments' ),
 		'taxonomies'            => array( 'category', 'post_tag' ),
 		'hierarchical'          => false,
 		'public'                => true,

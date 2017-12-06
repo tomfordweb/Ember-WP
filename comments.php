@@ -1,5 +1,5 @@
 <?php if ( 'comments.php' == basename( $_SERVER['SCRIPT_FILENAME'] ) ) return; ?>
-<section id="comments" class="row">
+<section id="comments">
 <?php
 
 $ember_comment_form_args = array(
@@ -9,6 +9,9 @@ $ember_comment_form_args = array(
 	'comment_field' => '<div class="col-sm-12"><div class="form-group"><label for="comment">' . _x( 'Comment', 'noun' ) . '</label><textarea id="comment" class="form-control" name="comment" cols="45" rows="8" aria-required="true"></textarea></div></div>',
 	'comment_notes_before' => '<div class="col-sm-12"><p class="comment-notes">' . __( 'Your email address will not be published.' ) . ( $req ? $required_text : '' ) . '</p></div>',
 	'submit_button' => '<div class="col-sm-12"><div class="form-group"><input name="%1$s" type="submit" id="%2$s" class="%3$s" value="%4$s" /></div>',
+	'title_reply_before' => '<div class="col-sm-12"><h3 id="reply-title" class="comment-reply-title">',
+	'title_reply_after' => '</h3></div>',
+	'logged_in_as' => '<div class="col-sm-12"><p class="logged-in-as">' . sprintf( __( 'Logged in as <a href="%1$s">%2$s</a>. <a href="%3$s" title="Log out of this account">Log out?</a>' ), admin_url( 'profile.php' ), $user_identity, wp_logout_url( apply_filters( 'the_permalink', get_permalink( ) ) ) ) . '</p></div>',
 	'fields' =>   array(
 	  'author' =>
 	    '<div class="col-md-6"><div class="comment-form-author form-group"><label for="author">' . __( 'Name', 'domainreference' ) . '</label> ' .

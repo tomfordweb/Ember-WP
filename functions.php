@@ -3,6 +3,8 @@
 require_once('inc/menus/bs4NavWalker.php');
 require_once('inc/comments/tfwCommentWalker.php');
 require_once('inc/cpt/snippet.php');
+require_once('inc/cpt/project.php');
+require_once('inc/metaboxes/snippet/gist.php');
 
 add_action( 'after_setup_theme', 'ember_setup' );
 add_action( 'wp_enqueue_scripts', 'ember_load_scripts' );
@@ -14,7 +16,9 @@ add_filter( 'get_comments_number', 'ember_comments_number' );
 
 add_filter('next_comments_link_attributes', 'ember_pagination_link_attributes');
 add_filter('previous_comments_link_attributes', 'ember_pagination_link_attributes');
-
+add_filter('next_post_link', 'ember_posts_link_pagination_class');
+add_filter('previous_post_link', 'ember_posts_link_pagination_class');
+add_filter('comment_reply_link', 'replace_reply_link_class');
 
 function ember_pagination_link_attributes() {
 
@@ -29,13 +33,7 @@ function ember_posts_link_pagination_class($format){
      $format = str_replace('href=', ember_pagination_link_attributes().' href=', $format);
      return $format;
 }
-add_filter('next_post_link', 'ember_posts_link_pagination_class');
 
-
-add_filter('previous_post_link', 'ember_posts_link_pagination_class');
-
-
-add_filter('comment_reply_link', 'replace_reply_link_class');
 
 
 function replace_reply_link_class($class){
@@ -58,17 +56,12 @@ function ember_setup()
 
 
 function ember_load_scripts()
-{	
-	wp_enqueue_style('bs4', '//maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css');
-	wp_enqueue_style('ember', get_stylesheet_directory_uri() . '/style.css',array('bs4'));
-	wp_enqueue_style('font-awesome','//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css');
-	
-	wp_register_script('popper','//cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js', array('jquery'));	
-	wp_register_script('bs4','//maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js', array('jquery'));
-	wp_enqueue_script( 'jquery' );
-	wp_enqueue_script('popper');	
-	wp_enqueue_script('ember-theme');
-	wp_enqueue_script('bs4');
+{
+	wp_enqueue_style('ember', get_stylesheet_directory_uri() . '/dist/css/theme.min.css',array());	
+	wp_register_script('ember',get_stylesheet_directory_uri() . '/dist/js/index.min.js', array('jquery'));
+
+	wp_enqueue_script('ember');
+
 }
 
 function ember_enqueue_comment_reply_script()
