@@ -45,13 +45,20 @@ class tomfordwebemberMetabox {
 		$this->field_generator( $post );
 	}
 	public function field_generator( $post ) {
-		$output = '';
-		$meta_value = get_post_meta( $post->ID, $this->meta_fields['id'], true );
-		echo '<p>Page attached Meta Dump</p><pre>';
-		var_dump($meta_value);
-		echo '</pre>';
-		echo '<p>----start react app---</p>';
-		echo '<div id="root" data-metakey='. $this->meta_fields['id'] . '></div>';
+		// $output = '';
+		$id = $this->meta_fields['id'];
+		$meta_value = get_post_meta( $post->ID, $id, true );
+		$meta_value = maybe_unserialize($meta_value, true);
+		$meta_value= json_decode(json_encode($meta_value), true);
+		// $meta_value = json_decode($meta_value, true);
+		// echo '<p>Page attached Meta Dump</p><pre>';
+		// var_dump($meta_value);
+		// echo '</pre>';
+		$data = json_encode($meta_value);
+		echo '<script type="text/javascript">';
+		echo sprintf('var %s_load_data = %s;', $id, $data);
+		echo '</script>';
+		echo '<div id="root" data-metakey='. $id . '></div>';
 	}
 	public function format_rows( $label, $input ) {
 		return '<tr><th>'.$label.'</th><td>'.$input.'</td></tr>';
@@ -65,7 +72,10 @@ class tomfordwebemberMetabox {
 		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
 			return $post_id;		
 		
-		update_post_meta( $post_id, $this->meta_fields['id'], $_POST[ $this->meta_fields['id'] ] );
+		$store = $_POST[ $this->meta_fields['id'] ];
+		$store_obj = json_decode(stripslashes($store));
+
+		update_post_meta( $post_id, $this->meta_fields['id'], maybe_serialize($store_obj) );
 
 	}
 }
