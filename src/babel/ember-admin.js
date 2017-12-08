@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Tabs, Tab, Panel} from 'react-bootstrap';
+import update from 'immutability-helper';
+const stringifyObject = require('stringify-object');
 
 /**
  * Create a HTML Checkbox
@@ -78,19 +80,26 @@ class DebugPanelTextarea extends React.Component {
 		this.setState({
 		  data : nextProps.data
 		});
-		this.props.bubbleUp(this.state.name, nextProps.data);
 	}
 
 	render() {
 		const styles = {
 			height: '400px'
 		}
+		
+		const pretty = stringifyObject(this.state.data, {
+		    indent: '  ',
+		    singleQuotes: false
+		});
+
+		const stringify = JSON.stringify(this.state.data);
+
 		return (
 			<div className="form-group">
 				<textarea
 					style={styles}
 					className="form-control" 
-					value={this.state.data} 
+					value={stringify} 
 					name={this.state.name}
 					readOnly
 				/>
@@ -109,7 +118,7 @@ class DebugPanel extends React.Component {
 			<DebugPanelTextarea
 				data={this.props.data} 
 				name={this.props.name} 
-				bubbleUp={this.props.updateSettings}/>
+				/>
 		);
 	}	
 }
@@ -182,7 +191,6 @@ class ColumnType extends React.Component {
 
 	bubbleUpHandler(event)
 	{
-		// console.log(this.props.data.nicename + ' bubbling up!');
 		this.props.bubbleUp(event, this.props.data);
 	}
 
@@ -235,31 +243,78 @@ class Bootstrap3Column extends React.Component {
 	constructor(props) {
 		super(props);
 
+		const colUniqId = makeid();
+		var use_store = false;
+		let stored_data = this.props.column;
+		if(stored_data !== null && typeof stored_data === 'object') {
+			use_store = true;
+		}
+
+		const cssClassVal = ((use_store) ? this.props.column.cssClass : '')
+		const layoutVal = ((use_store) ? this.props.column.layout : '');
+		const uniqIdVal = ((use_store) ? this.props.column.id : colUniqId);
+		const displayNameVal = ((use_store) ? this.props.column.displayName : 'Default');
+
+		// console.log(cssClassVal);
 		this.state = {
-			cssClass: 'col-sm-12',
-			cssClassLive: 'col-sm-12',
-			layout: 'PlainText',
-			id: 'field-123456',
-			displayName: 'Field 123456'		    
+			cssClass: cssClassVal,
+			cssClassLive: cssClassVal,
+			layout: layoutVal,
+			id: uniqIdVal,
+			colUniqId: '-'+uniqIdVal,
+			displayName: displayNameVal,
+			displayNameLive: displayNameVal		    
 		}
 
 		this.changedColumnGridClass = this.changedColumnGridClass.bind(this);
 		this.changedColumnGridState = this.changedColumnGridState.bind(this);
 		this.changedColumnLayoutType = this.changedColumnLayoutType.bind(this);
 		this.changedDisplayName = this.changedDisplayName.bind(this);
+
+		this.changedDisplayNameState = this.changedDisplayNameState.bind(this);
 	}
 
+
+
+	// componentWillReceiveProps(nextProps) {
+	//     let stored_data = this.props.column
+	//     console.log('np');
+	//     console.log(nextProps);
+	  	
+	   
+	//     	this.setState(stored_data);
+	//     }
+
+	
+
+	// componentWillReceiveProps(nextProps) {
+	// 	let self = this;
+	// 	self.props.bubbleUp(nextProps);
+	// 	// setTimeout(function(){  }, 3000);
+	// }
 	/**
 	 * The user has changed the bootstrap column class for the column
 	 * @param  {event}
 	 * @return {[type]}
 	 */
 	changedColumnGridClass(event) {
-		this.setState({
+
+		this.setState({	
 			'cssClass' : event.target.value
 		});
 
-		this.props.bubbleUp(this.state);
+		// The root issue behind using this awful code is that I can't find a component event
+		// that can send state to parent only once, using bubbleUp in any of the component event update methods causing 
+		// infinite loops, memory leaks, etc. I don't understand react or JS well enough to fix this currently
+		// It appears that this "solution" works for now, but the if there's a bug regarding columns, look here first.
+		// 
+		// @ todo, redo this.
+		// 
+		// Send the state to the parent
+		let self = this;
+		setTimeout(function(){ self.props.bubbleUp(self.state) }, 3000);
+
+
 	}
 
 	/**
@@ -277,11 +332,42 @@ class Bootstrap3Column extends React.Component {
 			'layout': event.target.value
 		});
 
-		this.props.bubbleUp(this.state);
+		// The root issue behind using this awful code is that I can't find a component event
+		// that can send state to parent only once, using bubbleUp in any of the component event update methods causing 
+		// infinite loops, memory leaks, etc. I don't understand react or JS well enough to fix this currently
+		// It appears that this "solution" works for now, but the if there's a bug regarding columns, look here first.
+		// 
+		// @ todo, redo this.
+		// 
+		// Send the state to the parent
+		let self = this;
+		setTimeout(function(){ self.props.bubbleUp(self.state) }, 3000);
 	}
 
 	changedDisplayName(event) {
+		let val = event.target.value;
+		this.setState({
+			displayName: val
+		});
 
+		// The root issue behind using this awful code is that I can't find a component event
+		// that can send state to parent only once, using bubbleUp in any of the component event update methods causing 
+		// infinite loops, memory leaks, etc. I don't understand react or JS well enough to fix this currently
+		// It appears that this "solution" works for now, but the if there's a bug regarding columns, look here first.
+		// 
+		// @ todo, redo this.
+		// 
+		// Send the state to the parent
+		let self = this;
+		setTimeout(function(){ self.props.bubbleUp(self.state) }, 3000);
+	}
+
+	changedDisplayNameState(event) {
+		let val = event.target.value;
+
+		this.setState({
+			'displayNameLive': val
+		});
 	}
 
 	render() {
@@ -293,27 +379,29 @@ class Bootstrap3Column extends React.Component {
 
 		for (var i = layout_options.length - 1; i >= 0; i--) {
 			let item = layout_options[i];
-			let selected = (this.state.layout === item) ? 'selected' : '';
-			layout_select.push(<option selected={selected} key={i} name={item} >{item}</option>);
+			let selected = (this.state.layout === item);
+			layout_select.push(<option defaultValue={selected} key={i} name={item} >{item}</option>);
 		}
 
 		return (
 			<div className={this.state.cssClass + ' admin-column-frontend'}>
-				<p>{ this.state.id }</p>
+					<div className="form-group">
+						<label>Display Name*</label>
+						<input type="text" className="form-control" onBlur={this.changedDisplayName} onChange={this.changedDisplayNameState} value={this.state.displayNameLive} />
+						<p>CSS Selector: <code>.{ this.state.id }</code></p>
+					</div>
+
 					<div className="form-group">
 						<label>Bootstrap Column Class*</label>
-						<input type="text" className="form-control" onBlur={this.changedColumnGridClass} onChange={this.changedColumnGridState} value={this.state.cssClassLive} />
+						<input type="text" className="form-control" disabled={!this.state.displayName} onBlur={this.changedColumnGridClass} onChange={this.changedColumnGridState} value={this.state.cssClassLive} />
 					</div>
 					<div className="form-group">
 						<label>Content Type</label>
-						<select className="form-control" onChange={this.changedColumnLayoutType}>
+						<select className="form-control" disabled={!this.state.displayName} onChange={this.changedColumnLayoutType}>
 							{layout_select}
 						</select>
 					</div>
-					<div className="form-group">
-						<label>Display Name:</label>
-						<input type="text" className="form-control" onChange={this.changedDisplayName} value={this.state.displayName} />
-					</div>
+					
 					<div className="form-group">
 
 					</div>
@@ -338,41 +426,72 @@ class Bootstrap3ColumnsCreator extends React.Component {
 
 	constructor(props) {
 		super(props);
-
+		console.log('col creator props');
+		console.log(this.props);
+		let use_defaults = false;
+		if(typeof this.props.columns === 'undefined') {
+			use_defaults = true;
+		}
+		console.log('--instantiating col creator---');
+		console.log(this.props.columns);
+		console.log('using defaults ' + use_defaults);
 		this.state=  {
-			columns : [],
-			data : this.props.data
+			columns : (use_defaults) ? [] : this.props.columns,
+			columns_count : (use_defaults) ? 0 : this.props.columns.length,
 		};
 
-		this.renderCurrentColumns = this.renderCurrentColumns.bind(this);
 		this.addColumn = this.addColumn.bind(this);
+		this.handleChildColumnChange = this.handleChildColumnChange.bind(this);
+
 	}
 
-	renderCurrentColumns() {
-		
-	}
 
 	addColumn()
 	{	
 		this.setState({
-			columns: this.state.columns.concat([{
-				'id' : null,
-				'cssClass' : null,
-				'content' : null
-			}])
+			columns_count: this.state.columns_count + 1
 		});
+	}
+	handleChildColumnChange(data) {
+
+		let existing_record = this.state.columns.find(x => x.id === data.id);
+
+		if(typeof existing_record === 'undefined') {
+			this.setState({
+				columns: this.state.columns.concat([data])
+			});
+		} else {
+			// i think this is what is breaking child bubble up bug
+			// pretty sure this is modifying the state of the child component causing infinte loops.
+			// 
+			// @todo check component bubbleUp bug against this
+			var copy = this.state.columns.slice();
+			var index = this.state.columns.indexOf(existing_record);
+
+			copy[index] = data;
+
+			this.setState({
+				columns: copy
+			})
+
+
+		}
+
+		this.props.bubbleUp(this.state);
 	}
 
 	render()
 	{
+
 		var columns = [];
-		if(this.state.columns.length > 0) {
-			for (var i = 0; i < this.state.columns.length; i++) {		
-				var row = this.state.columns[i];
+		if(this.state.columns_count > 0) {
+			console.log('iterating columns');
+			for (var i = 0; i < this.state.columns_count; i++) {		
+	
 				columns.push(<Bootstrap3Column
-								data={row}
-								key={i}
-								bubbleUp={this.props.bubbleUp}
+								key={i}							
+								bubbleUp={this.handleChildColumnChange}
+								column={this.state.columns[i]}
 							 />
 							);
 			}
@@ -407,10 +526,14 @@ class Bootstrap3ColumnsCreator extends React.Component {
 class FrontEndRow extends React.Component {
 	constructor(props) {
 		super(props);
+
 		const data = (typeof this.props.data !== 'undefined') ? this.props.data : {};
+		// console.log('--- instantiating front end row---');
+	 // 	console.log(data);	
 		this.state = {
-		  data: data,
+		  parent_key: this.props.parentId,	
 		  key: this.props.name,
+		  data: data,
 		  picker: false,
 		  row_types: [
 		  {
@@ -431,8 +554,8 @@ class FrontEndRow extends React.Component {
 		this.showPicker = this.showPicker.bind(this);
 		this.selectedColumn = this.selectedColumn.bind(this);
 		this.hidePicker = this.hidePicker.bind(this);
-
-	}
+		this.modifiedBootstrapRow = this.modifiedBootstrapRow.bind(this);
+	}	
 
 	hidePicker() {
 		this.setState({
@@ -446,18 +569,27 @@ class FrontEndRow extends React.Component {
 		});
 	}
 	modifiedBootstrapRow(data) {
-		console.log(data);
+
+		let copy = Object.assign({}, this.state);
+		copy.data = data;
+
+		this.setState({
+		  data: data
+		});
+
+
+		this.props.bubbleUp(copy);
 	}
+
 	selectedColumn(event, data) {
-		// console.log(data);
-		// console.log('selected column');
+
 
 		this.setState({ 
 		  data: data,
 		  picker: false
 		});
 
-		this.props.bubbleUp(event, data);
+		this.props.bubbleUp(this.state);
 	}
 
 	renderPicker() {		
@@ -477,32 +609,22 @@ class FrontEndRow extends React.Component {
 	}
 
 
-	renderRowData()
-	{
-		// console.log(this.state);
-		if(!isEmpty(this.state.data)) {
-			return (
-				<div>
-				<Bootstrap3ColumnsCreator
-					data={this.state.data}
-					bubbleUp={this.modifiedBootstrapRow}
-				/>
-				</div>
-			);
-		}
-
-		return '';
-	}
 	render() {
 
-		var add_more_message = (!isEmpty(this.state.data)) ? 'Change Row Type' : 'Select Row Type';
+		let add_more_message = (!isEmpty(this.state.data)) ? 'Change Row Type' : 'Select Row Type';
+
+		let col_data = (typeof this.state.data.data === 'undefined') ? [] : this.state.data.data.columns;
+
 		return (
 			<div className="col-sm-12">
 				{ this.renderPicker() }
 				<div className="well">
-				<div className="row">
-				{this.renderRowData() }
-				</div>
+					<div className="row">
+						<Bootstrap3ColumnsCreator
+							columns={col_data}
+							bubbleUp={this.modifiedBootstrapRow}
+						/>
+					</div>
 		
 					<p className="text-center" onClick={this.showPicker}>{add_more_message}</p>
 				
@@ -515,12 +637,15 @@ class FrontEndRow extends React.Component {
 class Frontend extends React.Component {
 	renderFrontEndRows() {
 		
+
 		// if no data exists, show a starter row
 		if(this.props.data.length <= 0) {
+			// console.log('calling in fresh frontendrow');
 			return (
 				<FrontEndRow
 					key={0}
 					bubbleUp={this.props.bubbleUp}
+					parentId={0}
 				/>
 			);
 		}
@@ -528,11 +653,12 @@ class Frontend extends React.Component {
 		// otherwise draw each frontendrow
 		var rowColumns = [];
 
+
 		for (var i = this.props.data.length - 1; i >= 0; i--) {
 			var row = this.props.data[i];
-
 			rowColumns.push(<FrontEndRow
 				key={i}
+				parentId={i}
 				bubbleUp={this.props.bubbleUp}
 				data={row}
 			/>)
@@ -574,23 +700,59 @@ class LandingPageApp extends React.Component {
 	    };
 
 	    this.handlePageOptionChange = this.handlePageOptionChange.bind(this);
-	    this.updateSettings = this.updateSettings.bind(this);
 	    this.handleFrontendUpdated = this.handleFrontendUpdated.bind(this);
 	  }
 
-	  handleFrontendUpdated(event, data) 
+	  /**
+	   * Inject Row data into the frontend array
+	   *
+	   * These rows are stored in the order they appear.
+	   */
+	  handleFrontendUpdated(data) 
 	  {
-	  	this.setState({ 
-		  frontend: this.state.frontend.concat([data])
-		});
-	  }
-	  updateSettings(name, value) {
+
+	  	// console.log('|||||||Start handleFrontEndUpdated|||||||||');
+	  	
+
+
+	  	if(this.state.frontend.length === 0) {
+	  		// console.log('------adding a new frontend dataset----');
+	  		// console.log('--row data--');
+		  	// console.log(data);
+		  	// console.log('--state--');
+		  	// console.log(this.state);
+		  	// console.log('state.frontend.length ' + this.state.frontend.length);
+
+	  		this.setState({
+	  			frontend: this.state.frontend.concat([data])
+	  		});
+	  	} else { 			
+
+	  		let key = data.parent_key
+	  		let element =  this.state.frontend;
+	  		element[key] = data;
+
+
+	  // 		console.log('-----we are updating this row----');
+			// console.log(element);
+			// console.log('-----with this data------');
+			// console.log(data);
+	  // 		console.log('-----this is what happened-----');
+	  // 		console.log(element);
+
+			this.setState({ 	
+				frontend: element
+			});
+	  	}
 
 	  }
 
+	  componentDidUpdate() {
+	  	// console.log('----app updating --');
+	  	// console.log(this.state);
+	  }
 	  componentDidMount() {
 	    let stored_data = this.props.loadData;
-
 
 	  	if(this.props.loadData !== null && typeof this.props.loadData === 'object') {
 	    	if(this.props.loadData.meta_key !== this.props.metaKey)
@@ -630,8 +792,7 @@ class LandingPageApp extends React.Component {
 				    </Tab>
 				    <Tab eventKey={4} title="Debug">
 				    	<DebugPanel
-				    		updateSettings={this.updateSettings}
-				    		data={ JSON.stringify(this.state, null, 2) }
+				    		data={ this.state }
 				    		name={this.state.meta_key}
 				    	/>
 				    </Tab>
@@ -659,4 +820,15 @@ function isEmpty(obj) {
             return false;
     }
     return true;
+}
+
+
+function makeid() {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for (var i = 0; i < 5; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
 }

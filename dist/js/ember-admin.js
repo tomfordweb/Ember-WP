@@ -18302,6 +18302,8 @@ exports.default = ToggleButton;
 "use strict";
 
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = __webpack_require__(0);
@@ -18322,15 +18324,22 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var BS3Checkbox = function (_React$Component) {
-	_inherits(BS3Checkbox, _React$Component);
+/**
+ * Create a HTML Checkbox
+ * Props:
+ * isChecked 		bool 		Whether or not the element is checked.
+ * name 			string 		HTML name attribute
+ * label			string 		The label for the checkbox
+ * checkBoxChanged	function 	Update the state and throw back to parent.
+ */
+var Checkbox = function (_React$Component) {
+	_inherits(Checkbox, _React$Component);
 
-	function BS3Checkbox(props) {
-		_classCallCheck(this, BS3Checkbox);
+	function Checkbox(props) {
+		_classCallCheck(this, Checkbox);
 
-		var _this = _possibleConstructorReturn(this, (BS3Checkbox.__proto__ || Object.getPrototypeOf(BS3Checkbox)).call(this, props));
+		var _this = _possibleConstructorReturn(this, (Checkbox.__proto__ || Object.getPrototypeOf(Checkbox)).call(this, props));
 
-		console.log(_this.props.isChecked);
 		_this.state = {
 			isChecked: _this.props.isChecked,
 			name: _this.props.name
@@ -18340,7 +18349,7 @@ var BS3Checkbox = function (_React$Component) {
 		return _this;
 	}
 
-	_createClass(BS3Checkbox, [{
+	_createClass(Checkbox, [{
 		key: 'handleInputChange',
 		value: function handleInputChange(event) {
 			var target = event.target;
@@ -18353,18 +18362,27 @@ var BS3Checkbox = function (_React$Component) {
 			this.props.checkBoxChanged(this.state.name, value);
 		}
 	}, {
+		key: 'componentWillReceiveProps',
+		value: function componentWillReceiveProps(nextProps) {
+			this.setState({
+				isChecked: nextProps.isChecked
+			});
+		}
+	}, {
 		key: 'render',
 		value: function render() {
-
-			var is_checked = this.props.checked == true ? 'checked' : null;
-
+			// See: https://bootstrapdocs.com/v3.3.6/docs/css/#checkboxes-and-radios
 			return _react2.default.createElement(
 				'div',
 				{ className: 'checkbox' },
 				_react2.default.createElement(
 					'label',
 					null,
-					_react2.default.createElement('input', { type: 'checkbox', name: this.props.name, checked: this.state.isChecked, onChange: this.handleInputChange }),
+					_react2.default.createElement('input', {
+						type: 'checkbox',
+						name: this.props.name,
+						checked: this.state.isChecked,
+						onChange: this.handleInputChange }),
 					' ',
 					this.props.label
 				)
@@ -18372,11 +18390,99 @@ var BS3Checkbox = function (_React$Component) {
 		}
 	}]);
 
-	return BS3Checkbox;
+	return Checkbox;
 }(_react2.default.Component);
 
-var PageOptions = function (_React$Component2) {
-	_inherits(PageOptions, _React$Component2);
+/**
+ * Generate a textarea and update the applications state. This creates a form element that is used for
+ * updating that page manually
+ *
+ * @todo make this agnostic of app saving feature, bad design
+ */
+
+
+var DebugPanelTextarea = function (_React$Component2) {
+	_inherits(DebugPanelTextarea, _React$Component2);
+
+	function DebugPanelTextarea(props) {
+		_classCallCheck(this, DebugPanelTextarea);
+
+		var _this2 = _possibleConstructorReturn(this, (DebugPanelTextarea.__proto__ || Object.getPrototypeOf(DebugPanelTextarea)).call(this, props));
+
+		_this2.state = {
+			data: _this2.props.data,
+			name: _this2.props.name
+		};
+		return _this2;
+	}
+
+	_createClass(DebugPanelTextarea, [{
+		key: 'componentWillReceiveProps',
+		value: function componentWillReceiveProps(nextProps) {
+			this.setState({
+				data: nextProps.data
+			});
+			this.props.bubbleUp(this.state.name, nextProps.data);
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+			var styles = {
+				height: '400px'
+			};
+			return _react2.default.createElement(
+				'div',
+				{ className: 'form-group' },
+				_react2.default.createElement('textarea', {
+					style: styles,
+					className: 'form-control',
+					value: this.state.data,
+					name: this.state.name,
+					readOnly: true
+				})
+			);
+		}
+	}]);
+
+	return DebugPanelTextarea;
+}(_react2.default.Component);
+
+/**
+ * Wrapper for applications debug panel
+ */
+
+
+var DebugPanel = function (_React$Component3) {
+	_inherits(DebugPanel, _React$Component3);
+
+	function DebugPanel() {
+		_classCallCheck(this, DebugPanel);
+
+		return _possibleConstructorReturn(this, (DebugPanel.__proto__ || Object.getPrototypeOf(DebugPanel)).apply(this, arguments));
+	}
+
+	_createClass(DebugPanel, [{
+		key: 'render',
+		value: function render() {
+			return _react2.default.createElement(DebugPanelTextarea, {
+				data: this.props.data,
+				name: this.props.name,
+				bubbleUp: this.props.updateSettings });
+		}
+	}]);
+
+	return DebugPanel;
+}(_react2.default.Component);
+
+/**
+ * Application global page options, enable or disable specific features.
+ *
+ * Originally intended as a proof of concept, there is no real meaning behidn these options yet.
+ */
+
+
+var PageOptions = function (_React$Component4) {
+	_inherits(PageOptions, _React$Component4);
 
 	function PageOptions() {
 		_classCallCheck(this, PageOptions);
@@ -18404,7 +18510,7 @@ var PageOptions = function (_React$Component2) {
 						_react2.default.createElement(
 							'li',
 							null,
-							_react2.default.createElement(BS3Checkbox, {
+							_react2.default.createElement(Checkbox, {
 								isChecked: this.props.options.enableSlider,
 								name: 'enableSlider',
 								label: 'Enable Slider',
@@ -18414,14 +18520,13 @@ var PageOptions = function (_React$Component2) {
 						_react2.default.createElement(
 							'li',
 							null,
-							_react2.default.createElement(BS3Checkbox, {
+							_react2.default.createElement(Checkbox, {
 								isChecked: this.props.options.enableCallouts,
 								name: 'enableCallouts',
 								label: 'Enable Callout Area',
 								checkBoxChanged: this.props.handlePageOptionChange
 							})
 						),
-						_react2.default.createElement('li', null),
 						_react2.default.createElement('li', null),
 						_react2.default.createElement('li', null)
 					)
@@ -18433,38 +18538,561 @@ var PageOptions = function (_React$Component2) {
 	return PageOptions;
 }(_react2.default.Component);
 
-var LandingPageApp = function (_React$Component3) {
-	_inherits(LandingPageApp, _React$Component3);
+var Backend = function (_React$Component5) {
+	_inherits(Backend, _React$Component5);
 
-	function LandingPageApp(props) {
-		_classCallCheck(this, LandingPageApp);
+	function Backend() {
+		_classCallCheck(this, Backend);
 
-		var _this3 = _possibleConstructorReturn(this, (LandingPageApp.__proto__ || Object.getPrototypeOf(LandingPageApp)).call(this, props));
-
-		_this3.state = {
-			meta_key: _this3.props.metaKey,
-			page_settings: [],
-			page_options: {
-				enableSlider: true,
-				enableCallouts: false
-			}
-		};
-		_this3.handlePageOptionChange = _this3.handlePageOptionChange.bind(_this3);
-		_this3.updateSettings = _this3.updateSettings.bind(_this3);
-		return _this3;
+		return _possibleConstructorReturn(this, (Backend.__proto__ || Object.getPrototypeOf(Backend)).apply(this, arguments));
 	}
 
-	_createClass(LandingPageApp, [{
-		key: 'updateSettings',
-		value: function updateSettings() {}
-	}, {
-		key: 'handlePageOptionChange',
-		value: function handlePageOptionChange(name, value) {
-			var stateCopy = Object.assign({}, this.state);
+	_createClass(Backend, [{
+		key: 'render',
+		value: function render() {
+			return _react2.default.createElement(
+				'p',
+				null,
+				'hello world'
+			);
+		}
+	}]);
 
-			console.log(stateCopy);
-			stateCopy.page_options[name] = value;
-			this.setState(stateCopy);
+	return Backend;
+}(_react2.default.Component);
+
+var AddRemoveButtons = function (_React$Component6) {
+	_inherits(AddRemoveButtons, _React$Component6);
+
+	function AddRemoveButtons() {
+		_classCallCheck(this, AddRemoveButtons);
+
+		return _possibleConstructorReturn(this, (AddRemoveButtons.__proto__ || Object.getPrototypeOf(AddRemoveButtons)).apply(this, arguments));
+	}
+
+	_createClass(AddRemoveButtons, [{
+		key: 'render',
+		value: function render() {
+			return _react2.default.createElement(
+				'div',
+				null,
+				_react2.default.createElement(
+					'p',
+					null,
+					_react2.default.createElement(
+						'button',
+						{ className: 'btn btn-small btn-success' },
+						'Add Row'
+					)
+				)
+			);
+		}
+	}]);
+
+	return AddRemoveButtons;
+}(_react2.default.Component);
+
+var ColumnType = function (_React$Component7) {
+	_inherits(ColumnType, _React$Component7);
+
+	function ColumnType(props) {
+		_classCallCheck(this, ColumnType);
+
+		var _this7 = _possibleConstructorReturn(this, (ColumnType.__proto__ || Object.getPrototypeOf(ColumnType)).call(this, props));
+
+		_this7.bubbleUpHandler = _this7.bubbleUpHandler.bind(_this7);
+		return _this7;
+	}
+
+	_createClass(ColumnType, [{
+		key: 'bubbleUpHandler',
+		value: function bubbleUpHandler(event) {
+			// console.log(this.props.data.nicename + ' bubbling up!');
+			this.props.bubbleUp(event, this.props.data);
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+			return _react2.default.createElement(
+				'div',
+				{ className: this.props.data.cssClass, onClick: this.bubbleUpHandler },
+				this.props.data.nicename
+			);
+		}
+	}]);
+
+	return ColumnType;
+}(_react2.default.Component);
+
+var RowPicker = function (_React$Component8) {
+	_inherits(RowPicker, _React$Component8);
+
+	function RowPicker() {
+		_classCallCheck(this, RowPicker);
+
+		return _possibleConstructorReturn(this, (RowPicker.__proto__ || Object.getPrototypeOf(RowPicker)).apply(this, arguments));
+	}
+
+	_createClass(RowPicker, [{
+		key: 'render',
+		value: function render() {
+			var rows = [];
+
+			for (var i = this.props.rowTypes.length - 1; i >= 0; i--) {
+				rows.push(_react2.default.createElement(ColumnType, {
+					key: i,
+					cssClass: 'col-sm-3',
+					data: this.props.rowTypes[i],
+					bubbleUp: this.props.bubbleUp
+				}));
+			}
+
+			return _react2.default.createElement(
+				'div',
+				{ className: 'row column-picker' },
+				_react2.default.createElement(
+					'div',
+					{ className: 'col-sm-12' },
+					'Please select your column type'
+				),
+				rows
+			);
+		}
+	}]);
+
+	return RowPicker;
+}(_react2.default.Component);
+
+var HeroSlider = function (_React$Component9) {
+	_inherits(HeroSlider, _React$Component9);
+
+	function HeroSlider() {
+		_classCallCheck(this, HeroSlider);
+
+		return _possibleConstructorReturn(this, (HeroSlider.__proto__ || Object.getPrototypeOf(HeroSlider)).apply(this, arguments));
+	}
+
+	_createClass(HeroSlider, [{
+		key: 'render',
+		value: function render() {
+			return _react2.default.createElement(
+				'p',
+				null,
+				'Hero Slider'
+			);
+		}
+	}]);
+
+	return HeroSlider;
+}(_react2.default.Component);
+
+var Bootstrap3Column = function (_React$Component10) {
+	_inherits(Bootstrap3Column, _React$Component10);
+
+	function Bootstrap3Column(props) {
+		_classCallCheck(this, Bootstrap3Column);
+
+		var _this10 = _possibleConstructorReturn(this, (Bootstrap3Column.__proto__ || Object.getPrototypeOf(Bootstrap3Column)).call(this, props));
+
+		_this10.state = {
+			cssClass: 'col-sm-12',
+			cssClassLive: 'col-sm-12',
+			layout: 'PlainText',
+			id: 'field-123456',
+			displayName: 'Field 123456'
+		};
+
+		_this10.changedColumnGridClass = _this10.changedColumnGridClass.bind(_this10);
+		_this10.changedColumnGridState = _this10.changedColumnGridState.bind(_this10);
+		_this10.changedColumnLayoutType = _this10.changedColumnLayoutType.bind(_this10);
+		_this10.changedDisplayName = _this10.changedDisplayName.bind(_this10);
+		return _this10;
+	}
+
+	/**
+  * The user has changed the bootstrap column class for the column
+  * @param  {event}
+  * @return {[type]}
+  */
+
+
+	_createClass(Bootstrap3Column, [{
+		key: 'changedColumnGridClass',
+		value: function changedColumnGridClass(event) {
+			this.setState({
+				'cssClass': event.target.value
+			});
+
+			this.props.bubbleUp(this.state);
+		}
+
+		/**
+   * This prop doesn't really mean anything, 
+   * allows for things like validation, 
+   * and screen not going nuts when user types	 * 
+   */
+
+	}, {
+		key: 'changedColumnGridState',
+		value: function changedColumnGridState(event) {
+			this.setState({
+				'cssClassLive': event.target.value
+			});
+		}
+	}, {
+		key: 'changedColumnLayoutType',
+		value: function changedColumnLayoutType(event) {
+			this.setState({
+				'layout': event.target.value
+			});
+
+			this.props.bubbleUp(this.state);
+		}
+	}, {
+		key: 'changedDisplayName',
+		value: function changedDisplayName(event) {}
+	}, {
+		key: 'render',
+		value: function render() {
+			var layout_options = ['PlainText', 'WYSIWYG', 'Image', 'BulletedList', 'Foo', 'Bar', 'Baz'];
+
+			var layout_select = [];
+
+			for (var i = layout_options.length - 1; i >= 0; i--) {
+				var item = layout_options[i];
+				var selected = this.state.layout === item ? 'selected' : '';
+				layout_select.push(_react2.default.createElement(
+					'option',
+					{ selected: selected, key: i, name: item },
+					item
+				));
+			}
+
+			return _react2.default.createElement(
+				'div',
+				{ className: this.state.cssClass + ' admin-column-frontend' },
+				_react2.default.createElement(
+					'p',
+					null,
+					this.state.id
+				),
+				_react2.default.createElement(
+					'div',
+					{ className: 'form-group' },
+					_react2.default.createElement(
+						'label',
+						null,
+						'Bootstrap Column Class*'
+					),
+					_react2.default.createElement('input', { type: 'text', className: 'form-control', onBlur: this.changedColumnGridClass, onChange: this.changedColumnGridState, value: this.state.cssClassLive })
+				),
+				_react2.default.createElement(
+					'div',
+					{ className: 'form-group' },
+					_react2.default.createElement(
+						'label',
+						null,
+						'Content Type'
+					),
+					_react2.default.createElement(
+						'select',
+						{ className: 'form-control', onChange: this.changedColumnLayoutType },
+						layout_select
+					)
+				),
+				_react2.default.createElement(
+					'div',
+					{ className: 'form-group' },
+					_react2.default.createElement(
+						'label',
+						null,
+						'Display Name:'
+					),
+					_react2.default.createElement('input', { type: 'text', className: 'form-control', onChange: this.changedDisplayName, value: this.state.displayName })
+				),
+				_react2.default.createElement('div', { className: 'form-group' })
+			);
+		}
+	}]);
+
+	return Bootstrap3Column;
+}(_react2.default.Component);
+
+var Bootstrap3NewColumn = function (_React$Component11) {
+	_inherits(Bootstrap3NewColumn, _React$Component11);
+
+	function Bootstrap3NewColumn() {
+		_classCallCheck(this, Bootstrap3NewColumn);
+
+		return _possibleConstructorReturn(this, (Bootstrap3NewColumn.__proto__ || Object.getPrototypeOf(Bootstrap3NewColumn)).apply(this, arguments));
+	}
+
+	_createClass(Bootstrap3NewColumn, [{
+		key: 'render',
+		value: function render() {
+			return _react2.default.createElement(
+				'div',
+				{ className: 'col-sm-12' },
+				_react2.default.createElement(
+					'p',
+					{ className: 'btn btn-sm btn-default', onClick: this.props.addColumn },
+					'Add Column'
+				)
+			);
+		}
+	}]);
+
+	return Bootstrap3NewColumn;
+}(_react2.default.Component);
+
+var Bootstrap3ColumnsCreator = function (_React$Component12) {
+	_inherits(Bootstrap3ColumnsCreator, _React$Component12);
+
+	function Bootstrap3ColumnsCreator(props) {
+		_classCallCheck(this, Bootstrap3ColumnsCreator);
+
+		var _this12 = _possibleConstructorReturn(this, (Bootstrap3ColumnsCreator.__proto__ || Object.getPrototypeOf(Bootstrap3ColumnsCreator)).call(this, props));
+
+		_this12.state = {
+			columns: [],
+			data: _this12.props.data
+		};
+
+		_this12.renderCurrentColumns = _this12.renderCurrentColumns.bind(_this12);
+		_this12.addColumn = _this12.addColumn.bind(_this12);
+		return _this12;
+	}
+
+	_createClass(Bootstrap3ColumnsCreator, [{
+		key: 'renderCurrentColumns',
+		value: function renderCurrentColumns() {}
+	}, {
+		key: 'addColumn',
+		value: function addColumn() {
+			this.setState({
+				columns: this.state.columns.concat([{
+					'id': null,
+					'cssClass': null,
+					'content': null
+				}])
+			});
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+			var columns = [];
+			if (this.state.columns.length > 0) {
+				for (var i = 0; i < this.state.columns.length; i++) {
+					var row = this.state.columns[i];
+					columns.push(_react2.default.createElement(Bootstrap3Column, {
+						data: row,
+						key: i,
+						bubbleUp: this.props.bubbleUp
+					}));
+				}
+			}
+
+			return _react2.default.createElement(
+				'div',
+				{ className: 'col-sm-12' },
+				_react2.default.createElement(
+					'h4',
+					null,
+					'Bootstrap 3 Columns'
+				),
+				_react2.default.createElement(
+					'p',
+					null,
+					'Please read bootstrap documentation if unfamiliar with grid layout.'
+				),
+				_react2.default.createElement(
+					'div',
+					{ className: 'row' },
+					columns
+				),
+				_react2.default.createElement(Bootstrap3NewColumn, {
+					addColumn: this.addColumn
+				})
+			);
+		}
+	}]);
+
+	return Bootstrap3ColumnsCreator;
+}(_react2.default.Component);
+
+/**
+ * This is where the magic happens for rows
+ *
+ * Contains all of the data used to display a row on the frontend of the website
+ * 
+ * Most datsets nested in this will bubble up to this class,
+ * Where the state of this class is pushed to the application to be saved, etc.
+ *
+ * todo: clean up the first data prop of this class, i don't really know what it is used for, may be duplicating something.
+ */
+
+
+var FrontEndRow = function (_React$Component13) {
+	_inherits(FrontEndRow, _React$Component13);
+
+	function FrontEndRow(props) {
+		_classCallCheck(this, FrontEndRow);
+
+		var _this13 = _possibleConstructorReturn(this, (FrontEndRow.__proto__ || Object.getPrototypeOf(FrontEndRow)).call(this, props));
+
+		var data = typeof _this13.props.data !== 'undefined' ? _this13.props.data : {};
+		_this13.state = {
+			data: data,
+			key: _this13.props.name,
+			picker: false,
+			row_types: [{
+				id: 'bootstrap3Columns',
+				nicename: 'Bootstrap Columns',
+				cssClass: 'ember-bs3-column',
+				data: []
+			}, {
+				id: 'slider',
+				nicename: 'Hero Slider',
+				cssClass: 'col-sm-12',
+				data: []
+			}]
+		};
+
+		_this13.showPicker = _this13.showPicker.bind(_this13);
+		_this13.selectedColumn = _this13.selectedColumn.bind(_this13);
+		_this13.hidePicker = _this13.hidePicker.bind(_this13);
+
+		return _this13;
+	}
+
+	_createClass(FrontEndRow, [{
+		key: 'hidePicker',
+		value: function hidePicker() {
+			this.setState({
+				picker: false
+			});
+		}
+	}, {
+		key: 'showPicker',
+		value: function showPicker() {
+			this.setState({
+				picker: true
+			});
+		}
+	}, {
+		key: 'modifiedBootstrapRow',
+		value: function modifiedBootstrapRow(data) {
+			console.log(data);
+		}
+	}, {
+		key: 'selectedColumn',
+		value: function selectedColumn(event, data) {
+			// console.log(data);
+			// console.log('selected column');
+
+			this.setState({
+				data: data,
+				picker: false
+			});
+
+			this.props.bubbleUp(event, data);
+		}
+	}, {
+		key: 'renderPicker',
+		value: function renderPicker() {
+
+			if (this.state.picker) {
+
+				return _react2.default.createElement(RowPicker, {
+					rowTypes: this.state.row_types,
+					bubbleUp: this.selectedColumn
+				});
+			}
+
+			return '';
+		}
+	}, {
+		key: 'renderRowData',
+		value: function renderRowData() {
+			// console.log(this.state);
+			if (!isEmpty(this.state.data)) {
+				return _react2.default.createElement(
+					'div',
+					null,
+					_react2.default.createElement(Bootstrap3ColumnsCreator, {
+						data: this.state.data,
+						bubbleUp: this.modifiedBootstrapRow
+					})
+				);
+			}
+
+			return '';
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+
+			var add_more_message = !isEmpty(this.state.data) ? 'Change Row Type' : 'Select Row Type';
+			return _react2.default.createElement(
+				'div',
+				{ className: 'col-sm-12' },
+				this.renderPicker(),
+				_react2.default.createElement(
+					'div',
+					{ className: 'well' },
+					_react2.default.createElement(
+						'div',
+						{ className: 'row' },
+						this.renderRowData()
+					),
+					_react2.default.createElement(
+						'p',
+						{ className: 'text-center', onClick: this.showPicker },
+						add_more_message
+					)
+				)
+			);
+		}
+	}]);
+
+	return FrontEndRow;
+}(_react2.default.Component);
+
+var Frontend = function (_React$Component14) {
+	_inherits(Frontend, _React$Component14);
+
+	function Frontend() {
+		_classCallCheck(this, Frontend);
+
+		return _possibleConstructorReturn(this, (Frontend.__proto__ || Object.getPrototypeOf(Frontend)).apply(this, arguments));
+	}
+
+	_createClass(Frontend, [{
+		key: 'renderFrontEndRows',
+		value: function renderFrontEndRows() {
+
+			// if no data exists, show a starter row
+			if (this.props.data.length <= 0) {
+				return _react2.default.createElement(FrontEndRow, {
+					key: 0,
+					bubbleUp: this.props.bubbleUp
+				});
+			}
+
+			// otherwise draw each frontendrow
+			var rowColumns = [];
+
+			for (var i = this.props.data.length - 1; i >= 0; i--) {
+				var row = this.props.data[i];
+
+				rowColumns.push(_react2.default.createElement(FrontEndRow, {
+					key: i,
+					bubbleUp: this.props.bubbleUp,
+					data: row
+				}));
+			}
+
+			return rowColumns;
 		}
 	}, {
 		key: 'render',
@@ -18472,11 +19100,77 @@ var LandingPageApp = function (_React$Component3) {
 
 			return _react2.default.createElement(
 				'div',
+				{ className: 'frontend drawing-area' },
+				this.renderFrontEndRows(),
+				_react2.default.createElement(AddRemoveButtons, null)
+			);
+		}
+	}]);
+
+	return Frontend;
+}(_react2.default.Component);
+
+var LandingPageApp = function (_React$Component15) {
+	_inherits(LandingPageApp, _React$Component15);
+
+	function LandingPageApp(props) {
+		_classCallCheck(this, LandingPageApp);
+
+		var _this15 = _possibleConstructorReturn(this, (LandingPageApp.__proto__ || Object.getPrototypeOf(LandingPageApp)).call(this, props));
+
+		_this15.state = {
+			meta_key: _this15.props.metaKey,
+			page_settings: [],
+			frontend: [],
+			backend: {},
+			page_options: {
+				enableSlider: true,
+				enableCallouts: false
+			}
+		};
+
+		_this15.handlePageOptionChange = _this15.handlePageOptionChange.bind(_this15);
+		_this15.updateSettings = _this15.updateSettings.bind(_this15);
+		_this15.handleFrontendUpdated = _this15.handleFrontendUpdated.bind(_this15);
+		return _this15;
+	}
+
+	_createClass(LandingPageApp, [{
+		key: 'handleFrontendUpdated',
+		value: function handleFrontendUpdated(event, data) {
+			this.setState({
+				frontend: this.state.frontend.concat([data])
+			});
+		}
+	}, {
+		key: 'updateSettings',
+		value: function updateSettings(name, value) {}
+	}, {
+		key: 'componentDidMount',
+		value: function componentDidMount() {
+			var stored_data = this.props.loadData;
+
+			if (this.props.loadData !== null && _typeof(this.props.loadData) === 'object') {
+				if (this.props.loadData.meta_key !== this.props.metaKey) throw 'Invalid post';
+				this.setState(stored_data);
+			}
+		}
+	}, {
+		key: 'handlePageOptionChange',
+		value: function handlePageOptionChange(name, value) {
+			var stateCopy = Object.assign({}, this.state);
+			stateCopy.page_options[name] = value;
+			this.setState(stateCopy);
+		}
+	}, {
+		key: 'render',
+		value: function render() {
+			return _react2.default.createElement(
+				'div',
 				{ className: 'row' },
-				_react2.default.createElement('textarea', { value: JSON.stringify(this.state, null, 2), name: this.state.meta_key, onChange: this.updateSettings }),
 				_react2.default.createElement(
 					_reactBootstrap.Tabs,
-					{ defaultActiveKey: 1, id: 'ember-landing-page' },
+					{ defaultActiveKey: 3, id: 'ember-landing-page' },
 					_react2.default.createElement(
 						_reactBootstrap.Tab,
 						{ eventKey: 1, title: 'Page Options' },
@@ -18487,13 +19181,27 @@ var LandingPageApp = function (_React$Component3) {
 					),
 					_react2.default.createElement(
 						_reactBootstrap.Tab,
-						{ eventKey: 2, title: 'Tab 2' },
-						'Tab 2 content'
+						{ eventKey: 2, title: 'Backend' },
+						_react2.default.createElement(Backend, {
+							data: this.state
+						})
 					),
 					_react2.default.createElement(
 						_reactBootstrap.Tab,
-						{ eventKey: 3, title: 'Tab 3' },
-						'Tab 3 content'
+						{ eventKey: 3, title: 'Frontend' },
+						_react2.default.createElement(Frontend, {
+							data: this.state.frontend,
+							bubbleUp: this.handleFrontendUpdated
+						})
+					),
+					_react2.default.createElement(
+						_reactBootstrap.Tab,
+						{ eventKey: 4, title: 'Debug' },
+						_react2.default.createElement(DebugPanel, {
+							updateSettings: this.updateSettings,
+							data: JSON.stringify(this.state, null, 2),
+							name: this.state.meta_key
+						})
 					)
 				)
 			);
@@ -18504,9 +19212,20 @@ var LandingPageApp = function (_React$Component3) {
 }(_react2.default.Component);
 
 var app = document.getElementById('root');
+
+var page_data = app.dataset.metakey + '_load_data';
+
 _reactDom2.default.render(_react2.default.createElement(LandingPageApp, {
-	metaKey: app.dataset.metakey
+	metaKey: app.dataset.metakey,
+	loadData: window[page_data]
 }), app);
+
+function isEmpty(obj) {
+	for (var key in obj) {
+		if (obj.hasOwnProperty(key)) return false;
+	}
+	return true;
+}
 
 /***/ }),
 /* 205 */
