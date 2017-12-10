@@ -19,6 +19,7 @@ class tomfordwebemberMetabox {
 	public function enqueue_scripts() {
 		wp_register_script('ember-admin-landing-page', get_stylesheet_directory_uri() . '/dist/js/ember-admin.js', array(), false, true);
 		wp_enqueue_style('bootstrap-3', '//maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css',array());	
+		wp_enqueue_style('font-awesome', '//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css', array());
 		wp_enqueue_Script('ember-admin-landing-page');
 	}
 

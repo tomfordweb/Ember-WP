@@ -10,6 +10,8 @@ module.exports = {
 
     rules: [
     		{ test: /\.js$/,
+
+                exclude: /node_modules/,
     		use: [
     			'babel-loader'
     		]},
@@ -21,6 +23,12 @@ module.exports = {
                 loader: "css-loader" // translates CSS into CommonJS
             }, {
                 loader: "sass-loader" // compiles Sass to CSS
+            }]
+        },
+        {
+            test: /\.css$/,
+            use: [{
+                loader: "css-loader" // creates style nodes from JS strings
             }]
         }]
   }
