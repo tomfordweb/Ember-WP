@@ -69,7 +69,7 @@ class LandingPageApp extends React.Component {
 	  		});
 	  	} else { 			
 	  		let key = data.parent_key;
-	  		console.log(key);
+
 	  		if(typeof key === 'undefined') {
 	  			throw 'Invalid row key supplied to App::handleFrontendUpdated';
 	  			return;
@@ -119,8 +119,6 @@ class LandingPageApp extends React.Component {
 	  	let output = [];
 	  	for(let i in fe) {
 	  		let row = fe[i];
-	  		// console.log('test');
-	  		// console.log(row);
 	  		output.push(
 		  		<FrontEndRow
 					key={i}

@@ -50,16 +50,16 @@ export class Bootstrap3Column extends React.Component {
 	 * The user has changed the bootstrap column class for the column
 	 */
 	handleColumnClassChange(event) {
-		let copy = update(this.state, {cssClass: {$set : event.target.value}});
-		this.setState(copy);
+		// let copy = update(this.state, {cssClass: {$set : event.target.value}});
+		// this.setState(copy);
 
 		this.props.bubbleUp(copy);
 	}
 
 
 	handleNiceNameChange(event) {
-		let copy = update(this.state, {displayName: {$set : event.target.value}});
-		this.setState(copy);
+		// let copy = update(this.state, {displayName: {$set : event.target.value}});
+		// this.setState(copy);
 
 		this.props.bubbleUp(copy);
 	}
@@ -245,7 +245,11 @@ class Bootstrap3IntroductionText extends React.Component {
 				<h3>Bootstrap Column Page Builder</h3>
 				<p>Create a detailed responsive layout with the columns builder below. Content options for each individual column are set in the Backend section. This page is used to create the general layout of your page.</p>
 
-				<p>You are able to append any bootstrap responsive class to the columns. Including sizes for <code>.col-xs-, .col-sm-, .col-md-, .col-lg-</code></p>
+				<p>Short Explanation: You are given 12 horizontal columns to add content to. You can arrange these columns however you want for 4 responsive breakpoints (XS, SM, MD, LG). Go left to right, top to bottom arranging columns.</p>
+
+				<p>The layout for column classes follows a consistent format:</p>
+
+				<p>You are able to append any bootstrap responsive class to the columns. Including: <code>.col-xs-, .col-sm-, .col-md-, .col-lg-</code></p>
 			</div>
 		)
 	}
