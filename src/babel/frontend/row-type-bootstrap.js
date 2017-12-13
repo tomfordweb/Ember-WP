@@ -7,65 +7,6 @@ import update from 'immutability-helper';
  */
 export class Bootstrap3Column extends React.Component {
 
-	constructor(props) {
-		super(props);
-
-		/**
-		 * create a unique ID for the column so it can be referenced by parent functions
-		 * @type {string}
-		 */
-		const colUniqId = makeid();		
-
-		this.state = {
-			cssClass: 'col-sm-12',
-			layout: '',
-			id: colUniqId,
-			displayName: 'Field ' + colUniqId	    
-		}
-	
-		this.handleColumnClassChange = this.handleColumnClassChange.bind(this);
-		this.handleNiceNameChange = this.handleNiceNameChange.bind(this);
-		
-	}
-
-	/**
-	 * After any stored props bubble down, set them to the current state, overwriting any defaults
-	 */
-	componentDidMount() {
-		let stored_data = this.props.column;
-		if(stored_data !== null && typeof stored_data === 'object') {
-
-			let state_copy = update(this.state, {
-				cssClass: {$set: this.props.column.cssClass},
-				layout: {$set: this.props.column.layout},
-				id: {$set: this.props.column.id},
-				displayName: {$set: this.props.column.displayName}
-			});
-
-			this.setState(state_copy);
-		}
-	}
-
-	/**
-	 * The user has changed the bootstrap column class for the column
-	 */
-	handleColumnClassChange(event) {
-		// let copy = update(this.state, {cssClass: {$set : event.target.value}});
-		// this.setState(copy);
-
-		this.props.bubbleUp(copy);
-	}
-
-
-	handleNiceNameChange(event) {
-		// let copy = update(this.state, {displayName: {$set : event.target.value}});
-		// this.setState(copy);
-
-		this.props.bubbleUp(copy);
-	}
-
-
-
 	render() {
 		let styles = {
 			border: '1px solid #aaa',
@@ -76,20 +17,20 @@ export class Bootstrap3Column extends React.Component {
 		}
 
 		return (
-			<div className={this.state.cssClass + ' admin-column-frontend'}>
+			<div className={this.props.cssClass + ' admin-column-frontend'}>
 				<div style={styles}>
 					<div className="form-group">
 						<span className="label label-default">Column: {this.props.columnIndex}</span>
 					</div>
 					<div className="form-group">
 						<label>Display Name*</label>
-						<input type="text" className="form-control" onChange={this.handleNiceNameChange} value={this.state.displayName} />
+						<input type="text" className="form-control" name="displayName" data-id={this.props.colId} onChange={this.props.bubbleUp} value={this.props.displayName} />
 						
 					</div>
 
 					<div className="form-group">
 						<label>Bootstrap Column Class*</label>
-						<input type="text" className="form-control" disabled={!this.state.displayName} onChange={this.handleColumnClassChange} value={this.state.cssClass} />
+						<input type="text" className="form-control" name="cssClass" data-id={this.props.colId} onChange={this.props.bubbleUp} value={this.props.cssClass} />
 					</div>
 				</div>		
 			</div>
@@ -148,15 +89,20 @@ export class Bootstrap3ColumnsCreator extends React.Component {
 	 */
 	addColumn()
 	{	
-		// increase column count by 1 in a copy of state
-		let new_state = update(this.state, {columns_count: {$apply: function(x) { 
-			if(x == 0 ) return 1;
+		let id = makeid();
 
-			return x + 1;
-		}}});
-		this.setState(new_state);
+		let new_state = update(this.state.columns, {$push: [{
+			cssClass: 'col-sm-12',
+			id: id,
+			displayName: 'Field ' + id
+		}]});
+
+		this.setState( {
+			columns: new_state
+		});
 
 		this.props.bubbleUp(new_state);
+
 	}
 
 	/**
@@ -168,29 +114,23 @@ export class Bootstrap3ColumnsCreator extends React.Component {
 	 *
 	 * @property {object} data State from child Bootstrap3Column component.
 	 */
-	handleChildColumnChange(data) {
+	handleChildColumnChange(event) {
 
-		let existing_record = this.state.columns.find(x => x.id === data.id);
+		const field = event.target.getAttribute('name');
+		const value = event.target.value;
+		const id    = event.target.getAttribute('data-id');
 
-		if(typeof existing_record === 'undefined') { 
-			// Check to see this column in the record
-			// push the object into this.state.columns array if not
-			var updated_columns = update(this.state.columns, {$push: [data]});
-			
-		} else {
-			// The column is being updated, not created
-			// Find the record by passing in [index] and update the whole column array
-			// Easiest way to do this is immutability-helpers package
-			var index = this.state.columns.indexOf(existing_record);
-
-			var updated_columns = update(this.state.columns, {[index]: {$set: data}});
-		}
+		let existing_record = this.state.columns.find(x => x.id === id);
+		var index = this.state.columns.indexOf(existing_record);
+		
+		let updated_columns = update(this.state.columns, {[index]: {[field] : {$set: value}}});
 
 		this.setState({
 			columns: updated_columns
 		});
 
 		this.props.bubbleUp(updated_columns);
+	
 	}
 
 	/**
@@ -201,18 +141,24 @@ export class Bootstrap3ColumnsCreator extends React.Component {
 	 * @return {[type]} [description]
 	 */
 	renderColumns() {
-		var columns = [];
+
 		
-		if(this.state.columns_count === 0) return false;
 
-		for (var i = 0; i < this.state.columns_count; i++) {		
+		var columns = [];
 
+		console.log(this.state.columns);
+		for (var i = 0; i < this.state.columns.length; i++) {		
+			var column = this.state.columns[i];
+	
+			console.log(column);
 			columns.push(<Bootstrap3Column
 				key={i}	
 				columnIndex={i}						
 				bubbleUp={this.handleChildColumnChange}
-				column={this.state.columns[i]}
-			 />
+				cssClass={column.cssClass}
+				displayName={column.displayName}
+				colId={column.id}
+				/>
 			);
 		}			
 		

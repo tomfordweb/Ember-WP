@@ -65,6 +65,7 @@ class tomfordwebemberMetabox {
 		return '<tr><th>'.$label.'</th><td>'.$input.'</td></tr>';
 	}
 	public function save_fields( $post_id ) {
+
 		if ( ! isset( $_POST['tomfordwebember_nonce'] ) )
 			return $post_id;
 		$nonce = $_POST['tomfordwebember_nonce'];
