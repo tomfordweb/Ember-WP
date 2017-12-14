@@ -6,23 +6,44 @@ import {Bootstrap3ColumnsCreator} from './row-type-bootstrap';
 import {HeroSlider} from './hero-slider-module';
 
 
+const dynamic_row_render_options = {
+	bootstrap3Columns : Bootstrap3ColumnsCreator,
+	slider : HeroSlider
+
+}
+
+function RenderSpecificRow(className, props) {
+
+
+	const SpecificComponent = dynamic_row_render_options[className];
+	console.log('render specific row is mapping ' + className + ' to...');
+	console.log(SpecificComponent);
+	return (
+		<SpecificComponent {...props} />
+	);
+
+}
+
+
 /**
- * This is where the magic happens for rows
+ * Top level component for this level of logic.
+ * The parent component "FrontEnd" exists to easily pass props to each registered child.
  *
- * Contains all of the data used to display a row on the frontend of the website
- * 
- * Most datsets nested in this will bubble up to this class,
- * Where the state of this class is pushed to the application to be saved, etc.
+ * All descendents of this should have their own state, as this component mainly just manages an array of its' children.
  *
+ * Children of this class are loaded dynamically by the function used above. In order to use one of these elements in the application
+ * You must add it to the object used with the function.
+ *
+ * todo: add makeid() function to the parent_key prop so we aren't accessing rows by index, that should get the clone above/below and delete methods working.
  * todo: clean up the first data prop of this class, i don't really know what it is used for, may be duplicating something.
  */
 export class FrontEndRow extends React.Component {
 	constructor(props) {
 		super(props);
 
-		const data = (typeof this.props.data !== 'undefined') ? this.props.data : {};
-		// console.log('data');
-		// console.log(data);
+		const data = (typeof this.props.data !== 'undefined') ? this.props.data : [];
+
+
 		this.state = {
 		  parent_key: this.props.parentId,	
 		  key: this.props.name,
@@ -35,10 +56,10 @@ export class FrontEndRow extends React.Component {
 		this.togglePickerOverlay = this.togglePickerOverlay.bind(this);
 		this.selectedColumn = this.selectedColumn.bind(this);
 		this.modifiedBootstrapRow = this.modifiedBootstrapRow.bind(this);
-		this.renderBootstrap3ColumnsCreator = this.renderBootstrap3ColumnsCreator.bind(this);
 		this.getRowTitle = this.getRowTitle.bind(this);
 		this.deleteRow = this.deleteRow.bind(this);
 		this.cloneAbove = this.cloneAbove.bind(this);
+		this.modifiedRow = this.modifiedRow.bind(this);
 		this.cloneBelow = this.cloneBelow.bind(this);
 	}	
 
@@ -68,20 +89,6 @@ export class FrontEndRow extends React.Component {
 		this.props.bubbleUp(new_state);
 	}
 
-	renderBootstrap3ColumnsCreator() {
-		/**
-		 * Description, help text, etc.
-		 * Stored in main application state currently.
-		 */
-		
-		return (
-	    	<Bootstrap3ColumnsCreator
-				columns={this.state.data}
-				bubbleUp={this.modifiedBootstrapRow}
-			/> // @todo change this to work like the frontend row thing does on the homepage
-		)
-	}
-
 	deleteRow() {
 
 		this.props.rowDeleteHandler(this.state.parent_key);
@@ -95,37 +102,27 @@ export class FrontEndRow extends React.Component {
 		this.props.rowCloneBelowHandler(this.state.parent_key);
 	}
 
+	modifiedRow() {
+		console.log('you are here!');
+	}
+
 	renderRow() {
-		let type = this.state.selectedType;
-		// console.log(type);
-		switch (type) {
-		  case 'bootstrap3Columns':
-		  	return this.renderBootstrap3ColumnsCreator();
-		  	// let col_data = (typeof this.state.data.columns === 'undefined') ? [] : this.state.data.columns;
-		  	// console.log('col data');
-		  	// console.log(col_data);
-		    
-		    break;
-		 	case 'slider': // @todo change the name of this to something more meaningful
-		 		let slides = this.state.data;
 
-		 		return (
-		 			<HeroSlider	slides={slides}	bubbleUp={this.modifiedBootstrapRow}>
 
-		 			</HeroSlider>
-		 		);
-
-		 	case 'ember-callouts':
-
-		  default:
-		    return (
+		if(typeof this.state.selectedType === 'undefined') {
+			return(
 				<RowTypeSelector
 					rowTypes={this.props.rowTypes}
 					bubbleUp={this.selectedColumn}
 				/>
-			);
-		    break;
+			)
 		}
+	
+		return RenderSpecificRow(this.state.selectedType, 
+		{
+			data: this.state.data,
+			bubbleUp: this.modifiedRow,
+		})
 
 	}
 

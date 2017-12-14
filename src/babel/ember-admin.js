@@ -105,7 +105,7 @@ class LandingPageApp extends React.Component {
 	  		let row_types = this.state.row_types;
 	  		var new_frontend = update(this.state.frontend, {$push: [{
 	  			parent_key: new_key,
-	  			data: {}
+	  			data: []
 	  		}]});
 
 	  		this.setState({

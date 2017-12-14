@@ -2,8 +2,129 @@ import React from 'react';
 import {makeid, isEmpty} from '../helpers';
 import FontAwesome from 'react-fontawesome';
 import update from 'immutability-helper';
+
+export class Bootstrap3ColumnsCreator extends React.Component {
+
+	constructor(props) {
+		super(props);
+
+		let use_defaults = false;
+		
+
+		this.state=  {
+			/**
+			 * An array that contains the state(s) of Bootstrap3Column component
+			 * @type {Array}
+			 */
+			columns : this.props.data,
+		};
+
+		this.addColumn = this.addColumn.bind(this);
+		this.handleChildColumnChange = this.handleChildColumnChange.bind(this);
+		this.renderColumns = this.renderColumns.bind(this);
+	}
+
+
+	/**
+	 * Increases the columns counter on state by 1,
+	 * This will allow for the column editor HTML to be drawn when the component rerenders.
+	 */
+	addColumn()
+	{	
+		let id = makeid();
+
+		var newObj = {
+			cssClass: 'col-sm-12',
+			id: id,
+			displayName: 'Field ' + id
+		};
+
+		console.log(this.state.columns);
+
+		let new_state = update(this.state.columns, {$push: [newObj]});
+
+		this.setState( {
+			columns: new_state
+		});
+
+		this.props.bubbleUp(new_state);
+
+	}
+
+	/**
+	 * When a child column fiel,d is changed, it's bubbleUp function will be passed to this
+	 * Update the specific record (fields are passed via attributes name, and data-id) from event object
+	 * And pass state up to parents
+	 */
+	handleChildColumnChange(event) {
+
+		const field = event.target.getAttribute('name'); // the key
+		const value = event.target.value; // the value
+		const id    = event.target.getAttribute('data-id'); // the unique id of the column
+
+		// first find the existing record. 
+		// @todo create a validator for this
+		let existing_record = this.state.columns.find(x => x.id === id);
+
+		// kind of backwards...but get the index of the single column object we found earlier.
+		var index = this.state.columns.indexOf(existing_record);
+		
+		// use immutability helpers to set the colums value for the specific field
+		let updated_columns = update(this.state.columns, {[index]: {[field] : {$set: value}}});
+
+		this.setState({
+			columns: updated_columns
+		});
+
+		// share state with parents.
+		this.props.bubbleUp(updated_columns);
+	
+	}
+
+	/**
+	 * Render the display of the column builder on the site
+	 *
+	 * There are no columns shown by default because you need to build the children objects via the counter, which runs off state.
+	 * The timing is wrong and the "second" column doesn't render correctly, causing you to have to click the button twice.
+	 * @return {[type]} [description]
+	 */
+	renderColumns() {
+		var columns = [];
+		for (var i = 0; i < this.state.columns.length; i++) {		
+			var column = this.state.columns[i];
+
+			columns.push(<Bootstrap3Column
+				key={i}	
+				columnIndex={i}						
+				bubbleUp={this.handleChildColumnChange}
+				cssClass={column.cssClass}
+				displayName={column.displayName}
+				colId={column.id}
+				/>
+			);
+		}			
+		
+		return columns;
+	}
+
+	render()
+	{	
+
+		return (			
+			<div>				  
+				{ this.renderColumns() }		
+				<div className="col-sm-12 clearfix">
+					{this.state.columns.length === 0 ? <Bootstrap3IntroductionText /> : null }
+					<p className="text-center"><button type="button" className="btn btn-primary btn-sm" onClick={this.addColumn}>Add Column</button></p>
+				</div>
+			</div>
+		);
+	}
+}
+
+
 /**
- * @async todo convert this to a child element like how the main app handles frontend rows...this will make code so much less fucking confusing.
+ * Single column
  */
 export class Bootstrap3Column extends React.Component {
 
@@ -39,149 +160,6 @@ export class Bootstrap3Column extends React.Component {
 }
 
 
-export class Bootstrap3ColumnsCreator extends React.Component {
-
-	constructor(props) {
-		super(props);
-
-		let use_defaults = false;
-		
-
-		this.state=  {
-			/**
-			 * An array that contains the state(s) of Bootstrap3Column component
-			 * @type {Array}
-			 */
-			columns : [],
-			/**
-			 * Internal counter for iterations of child Bootstrap3Column components, no need to set this
-			 * as a prop as this component gathers it from the length of the column array
-			 * @type {Number}
-			 */
-			columns_count : 0
-		};
-
-		this.addColumn = this.addColumn.bind(this);
-		this.handleChildColumnChange = this.handleChildColumnChange.bind(this);
-		this.renderColumns = this.renderColumns.bind(this);
-	}
-
-	/**
-	 * After the component mounts, set the state via props.
-	 */
-	componentDidMount() {
-
-
-		if(! isEmpty(this.props.columns)) {
-
-			let new_state = update(this.state, {
-				columns: {$set: this.props.columns},
-				columns_count: {$set: this.props.columns.length}
-			});
-
-			this.setState(new_state);
-		}
-	}
-
-	/**
-	 * Increases the columns counter on state by 1,
-	 * This will allow for the column editor HTML to be drawn when the component rerenders.
-	 */
-	addColumn()
-	{	
-		let id = makeid();
-
-		let new_state = update(this.state.columns, {$push: [{
-			cssClass: 'col-sm-12',
-			id: id,
-			displayName: 'Field ' + id
-		}]});
-
-		this.setState( {
-			columns: new_state
-		});
-
-		this.props.bubbleUp(new_state);
-
-	}
-
-	/**
-	 * When a child column is changed, it's bubbleUp function will be passed to this
-	 *
-	 * If the column does not exist, push it to state.columns array
-	 * If the column does exist, find it by the unique ID assigned to it, and update it.
-	 * After we create the row object, bubble it up to the parent.
-	 *
-	 * @property {object} data State from child Bootstrap3Column component.
-	 */
-	handleChildColumnChange(event) {
-
-		const field = event.target.getAttribute('name');
-		const value = event.target.value;
-		const id    = event.target.getAttribute('data-id');
-
-		let existing_record = this.state.columns.find(x => x.id === id);
-		var index = this.state.columns.indexOf(existing_record);
-		
-		let updated_columns = update(this.state.columns, {[index]: {[field] : {$set: value}}});
-
-		this.setState({
-			columns: updated_columns
-		});
-
-		this.props.bubbleUp(updated_columns);
-	
-	}
-
-	/**
-	 * Render the display of the column builder on the site
-	 *
-	 * There are no columns shown by default because you need to build the children objects via the counter, which runs off state.
-	 * The timing is wrong and the "second" column doesn't render correctly, causing you to have to click the button twice.
-	 * @return {[type]} [description]
-	 */
-	renderColumns() {
-
-		
-
-		var columns = [];
-
-		console.log(this.state.columns);
-		for (var i = 0; i < this.state.columns.length; i++) {		
-			var column = this.state.columns[i];
-	
-			console.log(column);
-			columns.push(<Bootstrap3Column
-				key={i}	
-				columnIndex={i}						
-				bubbleUp={this.handleChildColumnChange}
-				cssClass={column.cssClass}
-				displayName={column.displayName}
-				colId={column.id}
-				/>
-			);
-		}			
-		
-		return columns;
-	}
-
-
-
-	render()
-	{	
-		let column_count = this.state.columns.length;
-
-		return (			
-			<div>				  
-				    { this.renderColumns() }		
-				<div className="col-sm-12 clearfix">
-					{column_count === 0 ? <Bootstrap3IntroductionText /> : null }
-					<p className="text-center"><button type="button" className="btn btn-primary btn-sm" onClick={this.addColumn}>Add Column</button></p>
-				</div>
-			</div>
-		);
-	}
-}
 
 class Bootstrap3IntroductionText extends React.Component {
 
