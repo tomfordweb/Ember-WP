@@ -5,124 +5,78 @@ import update from 'immutability-helper';
 import {TFWCheckbox}  from './html-elements/form-elements';
 import {EmberFrontend, FrontEndRow} from './frontend/frontend';
 import FontAwesome from 'react-fontawesome';
+import {rowTypeData} from './schema/row-types';
+import {isEmpty, makeid} from './helpers';
 
 
 /**
- * @todo Rename state frontend to something more meaningful
  * @todo  The delete method seems to remove the last row visually, but the data isn't bubbling down to children
  */
 class LandingPageApp extends React.Component {
 
-	 constructor(props) {
-	    super(props);
+	constructor(props) {
+		super(props);
+			
+		 let pageData = (typeof this.props.loadData === 'undefined') ? [] : this.props.loadData.pageData;
 
-	     this.state = {
-			meta_key : this.props.metaKey,
-			page_settings: [],
-			frontend: [],
-			row_types: [{
-				id: 'bootstrap3Columns',
-				nicename: 'Bootstrap Columns',
-				cssClass: 'ember-bs3-column',
-				description : 'Create complex responsive layouts easily with bootstrap grid layout.',
-				helpText: 'Please read bootstraps documentation on grid layout',
-				icon: 'cogs',
-			},{
-				id: 'slider',
-				nicename: 'Hero Slider',
-				cssClass: 'col-sm-12',
-				description : 'A page slider with a number of configuration options.',
-				icon: 'arrows'
-			},{
-				id: 'ember-callouts',
-				nicename: 'Callout Section',
-				cssClass: 'col-sm-12',
-				description: 'Display an image, title, sentence, and a CTA button',
-				icon : 'cogs'
-			},{
-				id: 'ember-fw-googlemaps',
-				nicename: 'Full Width Google Map',
-				cssClass: 'col-sm-12',
-				description: 'Display an embedded map, can conform to the devices viewport, or container.',
-				icon: 'cogs'
-			}]
-	    };
+		 this.state = {
+			meta_key : "tomfordwebembe_79316",
+			pageData: pageData,
+			row_types: rowTypeData
+		};
 
-	    this.handleFrontendUpdated = this.handleFrontendUpdated.bind(this);
-	    this.renderFrontEndRows = this.renderFrontEndRows.bind(this);
-	    this.pushEmptyRow = this.pushEmptyRow.bind(this);
-	    this.cloneFrontEndRowAfter = this.cloneFrontEndRowAfter.bind(this);
-	    this.cloneFrontEndRowBefore = this.cloneFrontEndRowBefore.bind(this);
-	    this.deleteFrontEndRow = this.deleteFrontEndRow.bind(this);
-	  }
-
-	  /**
-	   * Inject Row data into the frontend array
-	   *
-	   * These rows are stored in the order they appear.
-	   */
-	  handleFrontendUpdated(data) 
-	  {
-	  	if(this.state.frontend.length === 0) {
-	  		this.setState({
-	  			frontend: this.state.frontend.concat([data])
-	  		});
-	  	} else { 			
-	  		let key = data.parent_key;
-
-	  		if(typeof key === 'undefined') {
-	  			throw 'Invalid row key supplied to App::handleFrontendUpdated';
-	  			return;
-	  		}
-
-	  		let newFrontend = update(this.state.frontend, {
-	  			[key] : {$set: data}
-	  		});
-	
-
-			this.setState({ 	
-				frontend: newFrontend
-			});
-	  	}
-
-	  }
+		this.renderFrontEndRows = this.renderFrontEndRows.bind(this);
+		this.pushEmptyRow = this.pushEmptyRow.bind(this);
+		this.handlePageDataUpdated = this.handlePageDataUpdated.bind(this);
+	}
 
 
-	  componentDidMount() {
-	    let stored_data = this.props.loadData;
+	handlePageDataUpdated(data) {
+		const id    = data.id; // the unique id of the column
+		// first find the existing record. 
+		// @todo create a validator for this
+		let existing_record = this.state.pageData.find(x => x.id === id);
 
-	  	if(this.props.loadData !== null && typeof this.props.loadData === 'object') {
-	    	if(this.props.loadData.meta_key !== this.props.metaKey)
-	    		throw 'Invalid post';
-	    	this.setState(stored_data);
-	    }
-	    
-	  }
 
-	  	pushEmptyRow() {
+		// kind of backwards...but get the index of the single column object we found earlier.
+		var index = this.state.pageData.indexOf(existing_record);
 
-	  		let new_key = (this.state.frontend.length === 0) ? 0 : this.state.frontend.length + 1;
-	  		let row_types = this.state.row_types;
-	  		var new_frontend = update(this.state.frontend, {$push: [{
-	  			parent_key: new_key,
-	  			data: []
-	  		}]});
+		let newState = update(this.state, {
+			pageData: {
+				[index] : {$set: data}
+			}
+		});
 
-	  		this.setState({
-	  			frontend: new_frontend
-	  		});
-	  	}
+		this.setState(newState);
+	}
+
+  	pushEmptyRow() {
+
+  		let uniqId = makeid();		
+
+  		let pgData = update(this.state.pageData, {$push: [{
+  			id: uniqId,
+  			data: [],
+  			selectedType: false,
+  		}]});
+
+  		this.setState({
+  			pageData: pgData
+  		});
+  	}
 
 	  
 	  renderFrontEndRows() {
-	  	let fe = this.state.frontend;
+	  	let fe = this.state.pageData;
 	  	let output = [];
 	  	for(let i in fe) {
 	  		let row = fe[i];
 	  		output.push(
 		  		<FrontEndRow
 					key={i}
-					parentId={i}
+					id={row.id}
+					selectedType={row.selectedType}
+					updatedPageData={this.handlePageDataUpdated}
 					data={row}
 				/>
 			);
@@ -130,20 +84,6 @@ class LandingPageApp extends React.Component {
 	  	return output;
 	  }
 
-	  cloneFrontEndRowAfter(row_id) {
-	  	console.log('clone below ' + row_id);
-	  }
-
-	  cloneFrontEndRowBefore(row_id) {
-	  	console.log('clone above ' + row_id);
-	  }
-	  deleteFrontEndRow(row_id) {
-
-	  	let updated = update(this.state.frontend, {$splice: [[row_id, 1]]});
-	  	this.setState({
-		  frontend: updated
-		});
-	  }
 	render() {
 		const debug_textarea_styles = {
 			height: '400px'
@@ -167,7 +107,6 @@ class LandingPageApp extends React.Component {
 				    <Tab eventKey={3} title="Frontend">
 				    	<EmberFrontend 
 				    		rowTypes={this.state.row_types} 
-				    		bubbleUp={this.handleFrontendUpdated}
 				    		rowCloneBelowHandler={this.cloneFrontEndRowAfter}
 				    		rowCloneAboveHandler={this.cloneFrontEndRowBefore}
 				    	    rowDeleteHandler={this.deleteFrontEndRow}>
@@ -194,9 +133,6 @@ class LandingPageApp extends React.Component {
 		);
 	}
 }
-
-
-
 
 const app = document.getElementById('root');
 

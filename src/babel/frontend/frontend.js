@@ -1,5 +1,5 @@
 import React from 'react';
-import {isEmpty} from '../helpers';
+import {isEmpty, makeid} from '../helpers';
 import update from 'immutability-helper';
 import FontAwesome from 'react-fontawesome';
 import {Bootstrap3ColumnsCreator} from './row-type-bootstrap';
@@ -16,8 +16,8 @@ function RenderSpecificRow(className, props) {
 
 
 	const SpecificComponent = dynamic_row_render_options[className];
-	console.log('render specific row is mapping ' + className + ' to...');
-	console.log(SpecificComponent);
+	// console.log('render specific row is mapping ' + className + ' to...');
+	// console.log(SpecificComponent);
 	return (
 		<SpecificComponent {...props} />
 	);
@@ -41,75 +41,38 @@ export class FrontEndRow extends React.Component {
 	constructor(props) {
 		super(props);
 
-		const data = (typeof this.props.data !== 'undefined') ? this.props.data : [];
-
 
 		this.state = {
-		  parent_key: this.props.parentId,	
-		  key: this.props.name,
-		  data: data.data,
-		  picker: false,
-		  selectedType: data.selectedType
-		 
+		  id: this.props.id,	
+		  data: this.props.data,
+		  selectedType: this.props.selectedType	 
 		};
 
-		this.togglePickerOverlay = this.togglePickerOverlay.bind(this);
 		this.selectedColumn = this.selectedColumn.bind(this);
-		this.modifiedBootstrapRow = this.modifiedBootstrapRow.bind(this);
 		this.getRowTitle = this.getRowTitle.bind(this);
-		this.deleteRow = this.deleteRow.bind(this);
-		this.cloneAbove = this.cloneAbove.bind(this);
 		this.modifiedRow = this.modifiedRow.bind(this);
-		this.cloneBelow = this.cloneBelow.bind(this);
+		this.renderRow = this.renderRow.bind(this);
 	}	
 
-	togglePickerOverlay() {
-		let current = this.state.picker;
-
-		this.setState({
-			picker: ! current
-		})
-
-	}
-
-	modifiedBootstrapRow(data) {
-		// replace the states data with what was passed to this component from it's child
-		// The child passes it's state to this row, which
-		let updated_state = update(this.state, { data: {$set: data}});
-		this.setState(updated_state);
-
-		this.props.bubbleUp(this.state);
-	}
 
 	selectedColumn(id) {
-		// Make a copy of the state and update the selectedType to what was selected from RowTypeSelector
-		let new_state = update(this.state, {$merge: {selectedType: id}});
-		this.setState(new_state);
-		// Push the new state up so parent apps only need to redraw once
-		this.props.bubbleUp(new_state);
+		this.setState(update(this.state, {$merge: {selectedType: id}}));
 	}
 
-	deleteRow() {
 
-		this.props.rowDeleteHandler(this.state.parent_key);
-	}
+	modifiedRow(data) {
 
-	cloneAbove() {
-		this.props.rowCloneAboveHandler(this.state.parent_key);
-	}
+		let newState = update(this.state, {
+			data: {$set : data}
+		});
 
-	cloneBelow() {
-		this.props.rowCloneBelowHandler(this.state.parent_key);
-	}
-
-	modifiedRow() {
-		console.log('you are here!');
+		this.setState(newState);
+		this.props.updatedPageData(newState);
 	}
 
 	renderRow() {
 
-
-		if(typeof this.state.selectedType === 'undefined') {
+		if(! this.state.selectedType) {
 			return(
 				<RowTypeSelector
 					rowTypes={this.props.rowTypes}
@@ -117,10 +80,10 @@ export class FrontEndRow extends React.Component {
 				/>
 			)
 		}
-	
+		
 		return RenderSpecificRow(this.state.selectedType, 
 		{
-			data: this.state.data,
+			data: this.state.data.data,
 			bubbleUp: this.modifiedRow,
 		})
 
@@ -162,10 +125,10 @@ export class FrontEndRow extends React.Component {
 		return (	
 			<div className="col-sm-12">
 				<div className="well">
-					<p className="pull-left">Row: { this.state.parent_key}</p>
+					<p className="pull-left">Row: { this.state.id}</p>
 					<div className="pull-right">
 						<div className="form-inline">
-							<button type="button" style={button_styles} onClick={this.deleteRow}className="btn btn-danger btn-xs">Delete Row { this.state.parent_key}</button>
+							<button type="button" style={button_styles} onClick={this.deleteRow}className="btn btn-danger btn-xs">Delete Row { this.state.rowKey}</button>
 							<button type="button" style={button_styles} onClick={this.cloneAbove} className="btn btn-default btn-xs">Clone Above</button>
 							<button type="button" onClick={this.cloneBelow} className="btn btn-default btn-xs">Clone Below</button>
 						</div>
@@ -191,9 +154,8 @@ export class FrontEndRow extends React.Component {
 
 export class EmberFrontend extends React.Component {
 
-	 constructor() {
-	    super()
-	    // Bind the method to the component context
+	 constructor(props) {
+	    super(props)
 	    this.renderChildren = this.renderChildren.bind(this)
 	  }
 

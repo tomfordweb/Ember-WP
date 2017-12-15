@@ -39,7 +39,7 @@ export class Bootstrap3ColumnsCreator extends React.Component {
 			displayName: 'Field ' + id
 		};
 
-		console.log(this.state.columns);
+		// console.log(this.state.columns);
 
 		let new_state = update(this.state.columns, {$push: [newObj]});
 
