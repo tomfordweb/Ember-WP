@@ -15,3 +15,16 @@ export function makeid(amount = 10) {
 
   return text;
 }
+
+export const GetIndexByKey = (key, needle, haystack) => {
+
+  let existingRecord = haystack.find(x => x[key] === needle);
+
+  return haystack.indexOf(existingRecord);
+}
+
+export const ReturnArrayIfUndefined = (variable) => {
+  const noResults = (typeof variable === 'undefined' || variable === '' || variable === null);
+
+  return (noResults) ? []  : variable;
+}

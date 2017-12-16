@@ -3,11 +3,25 @@ import ReactDOM from 'react-dom';
 import {Tabs, Tab, Panel} from 'react-bootstrap';
 import update from 'immutability-helper';
 import {TFWCheckbox}  from './html-elements/form-elements';
-import {EmberFrontend, FrontEndRow} from './frontend/frontend';
+import {EmberFrontend, FrontEndRow, AddRowElement} from './frontend/frontend';
 import FontAwesome from 'react-fontawesome';
 import {rowTypeData} from './schema/row-types';
-import {isEmpty, makeid} from './helpers';
 
+import {isEmpty, makeid, ReturnArrayIfUndefined, GetIndexByKey} from './helpers';
+
+const debug_textarea_styles = {
+	height: '400px'
+}
+
+
+
+export const CreateEmptyRow = (uniqId) => {
+	return {
+		id: uniqId,
+		data: [],
+		selectedType: false,
+	}
+}
 
 /**
  * @todo  The delete method seems to remove the last row visually, but the data isn't bubbling down to children
@@ -15,31 +29,21 @@ import {isEmpty, makeid} from './helpers';
 class LandingPageApp extends React.Component {
 
 	constructor(props) {
-		super(props);
-			
-		 let pageData = (typeof this.props.loadData === 'undefined') ? [] : this.props.loadData.pageData;
+		super(props)
+
+		 const pageData = ReturnArrayIfUndefined(this.props.loadData.pageData)
 
 		 this.state = {
 			meta_key : "tomfordwebembe_79316",
 			pageData: pageData,
 			row_types: rowTypeData
-		};
-
-		this.renderFrontEndRows = this.renderFrontEndRows.bind(this);
-		this.pushEmptyRow = this.pushEmptyRow.bind(this);
-		this.handlePageDataUpdated = this.handlePageDataUpdated.bind(this);
+		}
 	}
 
 
-	handlePageDataUpdated(data) {
-		const id    = data.id; // the unique id of the column
-		// first find the existing record. 
-		// @todo create a validator for this
-		let existing_record = this.state.pageData.find(x => x.id === id);
+	handlePageDataUpdated = (data) => {
 
-
-		// kind of backwards...but get the index of the single column object we found earlier.
-		var index = this.state.pageData.indexOf(existing_record);
+		const index = GetIndexByKey('id', data.id, this.state.pageData);
 
 		let newState = update(this.state, {
 			pageData: {
@@ -50,15 +54,13 @@ class LandingPageApp extends React.Component {
 		this.setState(newState);
 	}
 
-  	pushEmptyRow() {
+  	pushEmptyRow = () => {
 
   		let uniqId = makeid();		
 
-  		let pgData = update(this.state.pageData, {$push: [{
-  			id: uniqId,
-  			data: [],
-  			selectedType: false,
-  		}]});
+  		const row = CreateEmptyRow(uniqId);
+
+  		let pgData = update(this.state.pageData, {$push: [row]});
 
   		this.setState({
   			pageData: pgData
@@ -66,34 +68,25 @@ class LandingPageApp extends React.Component {
   	}
 
 	  
-	  renderFrontEndRows() {
-	  	let fe = this.state.pageData;
-	  	let output = [];
-	  	for(let i in fe) {
-	  		let row = fe[i];
-	  		output.push(
-		  		<FrontEndRow
-					key={i}
-					id={row.id}
-					selectedType={row.selectedType}
-					updatedPageData={this.handlePageDataUpdated}
-					data={row}
-				/>
-			);
-	  	}
-	  	return output;
-	  }
-
-	render() {
-		const debug_textarea_styles = {
-			height: '400px'
+	renderFrontEndRows = () => {
+		let fe = this.state.pageData;
+		let output = [];
+		for(let i in fe) {
+			let row = fe[i];
+			output.push(
+	  		<FrontEndRow
+				key={i}
+				id={row.id}
+				selectedType={row.selectedType}
+				updatedPageData={this.handlePageDataUpdated}
+				data={row}
+			/>
+		);
 		}
+		return output;
+	}
 
-		const row_control_container_styles = {
-			position: 'absolute',
-			bottom: 0,
-			right: 0
-		}
+	render() {		
 		
 		const stringified_output = JSON.stringify(this.state);
 
@@ -113,9 +106,10 @@ class LandingPageApp extends React.Component {
 				    		{this.renderFrontEndRows()}
 				    	</EmberFrontend>
 
-				    	<div style={row_control_container_styles}>
-				    	<FontAwesome onClick={this.pushEmptyRow} name="plus-circle" size="2x"/>
-				    	</div>
+				    	<AddRowElement
+				    		pushEmptyRow={this.pushEmptyRow}
+				    	/>
+				    	
 				    </Tab>
 				    <Tab eventKey={4} title="Debug">
 				    	<div className="form-group">
@@ -134,9 +128,9 @@ class LandingPageApp extends React.Component {
 	}
 }
 
-const app = document.getElementById('root');
+const app = document.getElementById('root')
 
-const page_data = app.dataset.metakey + '_load_data';
+const page_data = app.dataset.metakey + '_load_data'
 
 ReactDOM.render(
   <LandingPageApp
@@ -144,7 +138,7 @@ ReactDOM.render(
   	loadData={window[page_data]}
    />,
   app
-);
+)
 
 
 

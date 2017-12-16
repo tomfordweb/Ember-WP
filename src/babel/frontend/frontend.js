@@ -1,26 +1,53 @@
 import React from 'react';
-import {isEmpty, makeid} from '../helpers';
+import {isEmpty, makeid, GetIndexByKey} from '../helpers';
 import update from 'immutability-helper';
 import FontAwesome from 'react-fontawesome';
 import {Bootstrap3ColumnsCreator} from './row-type-bootstrap';
 import {HeroSlider} from './hero-slider-module';
+import {rowTypeData} from '../schema/row-types';
+import PropTypes from 'prop-types';
 
-
-const dynamic_row_render_options = {
-	bootstrap3Columns : Bootstrap3ColumnsCreator,
-	slider : HeroSlider
-
+const row_control_container_styles = {
+	position: 'absolute',
+	bottom: 0,
+	right: 0
 }
 
-function RenderSpecificRow(className, props) {
+/**
+ * HOF to return search rowTypeData schema by prop rowTypeDataID
+ * @param  {string} rowTypeDataID The ID attribute
+ * @return {object}               The model attribute of the object, a direct reference to a react component.
+ */
+export const DynamicRowRenderModels = (rowTypeDataID) => {
 
+	const key = GetIndexByKey('id', rowTypeDataID, rowTypeData);
+	const record = rowTypeData[key];
+	return record.model;
+}
 
-	const SpecificComponent = dynamic_row_render_options[className];
-	// console.log('render specific row is mapping ' + className + ' to...');
-	// console.log(SpecificComponent);
+DynamicRowRenderModels.propTypes = {
+	rowTypeDataID : PropTypes.string
+}
+
+/**
+ * Another HOF to generate a react component model by variable inside of rowTypeData object in schema.
+ * @param  {string} className The id to pass to DynamicRowRenderModels
+ * @param  {object} props     Additional properties to pass to the component
+ * @return {object}           A react component
+ */
+export const RenderSpecificRow = (className, props) => {
+
+	const SpecificComponent = DynamicRowRenderModels(className);
+
 	return (
 		<SpecificComponent {...props} />
 	);
+
+}
+
+RenderSpecificRow.propTypes = {
+	className : PropTypes.string,
+	props: PropTypes.props
 
 }
 
@@ -41,27 +68,18 @@ export class FrontEndRow extends React.Component {
 	constructor(props) {
 		super(props);
 
-
 		this.state = {
 		  id: this.props.id,	
 		  data: this.props.data,
 		  selectedType: this.props.selectedType	 
 		};
-
-		this.selectedColumn = this.selectedColumn.bind(this);
-		this.getRowTitle = this.getRowTitle.bind(this);
-		this.modifiedRow = this.modifiedRow.bind(this);
-		this.renderRow = this.renderRow.bind(this);
 	}	
 
-
-	selectedColumn(id) {
+	selectedColumn = (id) => {
 		this.setState(update(this.state, {$merge: {selectedType: id}}));
 	}
 
-
-	modifiedRow(data) {
-
+	modifiedRow = (data) => {
 		let newState = update(this.state, {
 			data: {$set : data}
 		});
@@ -70,7 +88,7 @@ export class FrontEndRow extends React.Component {
 		this.props.updatedPageData(newState);
 	}
 
-	renderRow() {
+	renderRow = () => {
 
 		if(! this.state.selectedType) {
 			return(
@@ -89,25 +107,18 @@ export class FrontEndRow extends React.Component {
 
 	}
 
-	getRowTitle(row_information) {
-		if(typeof row_information === 'object') {
-			return (
-				<div>
-					<div className="pull-left">
-						<FontAwesome name={row_information.icon}/>&nbsp;{ row_information.nicename }
-					</div>
-					<div className="pull-right">
-						<FontAwesome onClick={this.togglePickerOverlay} name="pencil-square-o"/>
-					</div>
-				</div>
-			);
-		} else {
+	deleteRow = () => {
 
-			return (
-				<p>Row Picker</p>
-			);
-		}
 	}
+
+	cloneAbove = () => {
+
+	}
+
+	cloneBelow = () => {
+
+	}
+
 	render() {
 
 		
@@ -115,30 +126,29 @@ export class FrontEndRow extends React.Component {
 			overflow: 'hidden'
 		}
 
-		const button_styles = {
+			const button_styles = {
 			marginRight: '10px'
 		}
 
-		var row_information = this.props.rowTypes.find(x => x.id === this.state.selectedType);
+		var row_information = rowTypeData.find(x => x.id === this.state.selectedType);
 
-	
+		console.log(row_information);
 		return (	
 			<div className="col-sm-12">
 				<div className="well">
 					<p className="pull-left">Row: { this.state.id}</p>
 					<div className="pull-right">
 						<div className="form-inline">
-							<button type="button" style={button_styles} onClick={this.deleteRow}className="btn btn-danger btn-xs">Delete Row { this.state.rowKey}</button>
-							<button type="button" style={button_styles} onClick={this.cloneAbove} className="btn btn-default btn-xs">Clone Above</button>
-							<button type="button" onClick={this.cloneBelow} className="btn btn-default btn-xs">Clone Below</button>
+							<FrontEndRowButton onClick={this.deleteRow} className="btn btn-danger btn-xs" value="Delete Row" />
+							<FrontEndRowButton onClick={this.cloneAbove} className="btn btn-default btn-xs" value="Clone Above" />
+							<FrontEndRowButton onClick={this.cloneBelow} className="btn btn-default btn-xs" value="Clone Below" />
 						</div>
 					</div>	
 					<div className="row">
 						<div className="col-sm-12">
 							<div className="panel panel-default">							
 								<div className="panel-heading" style={panel_styles}>
-									{ this.getRowTitle(row_information) }
-								
+									<FrontEndRowHeaderInformation row={row_information} editAction={this.togglePickerOverlay} />								
 						  		</div>
 						  <div className="panel-body">
 						  	{ this.renderRow() }
@@ -151,6 +161,47 @@ export class FrontEndRow extends React.Component {
 		);
 	}
 }
+
+
+/**
+ * The header for a frontend row. Contains the icon, it's title, and an edit button that is passed via prop editAction
+ * @param  {object} props The props
+ * @return {object}       JSX
+ */
+export const FrontEndRowHeaderInformation = (props) => {
+	if(typeof props.row === 'object') {
+		return (
+			<div>
+				<div className="pull-left">
+					<FontAwesome name={props.row.icon}/>&nbsp;{ props.row.nicename }
+				</div>
+				<div className="pull-right">
+					<FontAwesome onClick={props.editAction} name="pencil-square-o"/>
+				</div>
+			</div>
+		);
+	} 
+
+	return (<p>Row Picker</p>);
+	
+}
+
+/**
+ * Pass a bunch of props to a button. Make sure to include a value prop
+ * @param  {object} props Props
+ * @return {html}         A button
+ */
+export const FrontEndRowButton = (props) => {
+	const button_styles = {
+		marginRight: '10px'
+	}
+
+	return (
+		<button type="button" style={button_styles} {...props}>{props.value}</button>
+	);
+
+}
+
 
 export class EmberFrontend extends React.Component {
 
@@ -182,7 +233,13 @@ export class EmberFrontend extends React.Component {
 }
 
 
-
+export const AddRowElement = (props) => {
+	return (
+		<div style={row_control_container_styles}>
+	    	<FontAwesome onClick={props.pushEmptyRow} name="plus-circle" size="2x"/>
+	    </div>
+	)	
+}
 
 
 /**
